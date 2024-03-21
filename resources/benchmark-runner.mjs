@@ -353,29 +353,18 @@ export class BenchmarkRunner {
     }
 
     _removeFrame() {
-        if (this._frame) {
-            this._frame.parentNode.removeChild(this._frame);
+        if (this._frame)
             this._frame = null;
-        }
     }
 
     async _appendFrame(src) {
-        const frame = document.createElement("iframe");
-        const style = frame.style;
-        style.width = `${params.viewport.width}px`;
-        style.height = `${params.viewport.height}px`;
-        style.border = "0px none";
-        style.position = "absolute";
-        frame.setAttribute("scrolling", "no");
-        frame.className = "test-runner";
-        style.left = "50%";
-        style.top = "50%";
-        style.transform = "translate(-50%, -50%)";
-
-        if (this._client?.willAddTestFrame)
-            await this._client.willAddTestFrame(frame);
-
-        document.body.insertBefore(frame, document.body.firstChild);
+        const win = window.open("about:blank", "hahatestwindow", "width=800,height=600");
+        const frame = {
+            contentWindow: win,
+            get contentDocument() {
+                return win.document;
+            }
+        };
         this._frame = frame;
         return frame;
     }
@@ -444,11 +433,15 @@ export class BenchmarkRunner {
     async _prepareSuite(suite) {
         return new Promise((resolve) => {
             const frame = this._page._frame;
-            frame.onload = async () => {
-                await suite.prepare(this._page);
-                resolve();
+            frame.contentWindow.onunload = () => {
+                setTimeout(() => {
+                    frame.contentWindow.onload = async () => {
+                        await suite.prepare(this._page);
+                        resolve();
+                    };
+                }, 0);
             };
-            frame.src = `resources/${suite.url}`;
+            frame.contentWindow.location = `resources/${suite.url}`;
         });
     }
 
