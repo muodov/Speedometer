@@ -6,6 +6,10 @@
         <title>Speedometer 3.0</title>
         <link rel="stylesheet" href="resources/main.css" />
         <link rel="icon" href="resources/favicon.png" />
+        <script>
+            window.requestAnimationFrame = (cb) => window.setTimeout(cb, 0);
+            window.cancelAnimationFrame = window.clearTimeout;
+        </script>
         <script src="resources/main.mjs" type="module"></script>
     </head>
     <body>
